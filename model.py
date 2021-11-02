@@ -35,13 +35,24 @@ class Linear_QNet():
     #     x = self.linear2(x)
     #     return x
 
-    # def save(self, file_name='model.pth'):
-    #     model_folder_path = './model'
-    #     if not os.path.exists(model_folder_path):
-    #         os.makedirs(model_folder_path)
+    def save(self, file_name='model.h5'):
+        model_folder_path = './model'
+        if not os.path.exists(model_folder_path):
+            os.makedirs(model_folder_path)
 
-    #     file_name = os.path.join(model_folder_path, file_name)
-    #     torch.save(self.state_dict(), file_name)
+        file_name = os.path.join(model_folder_path, file_name)
+        #torch.save(self.state_dict(), file_name)
+        self.model.save(file_name);
+        print(f"Model Saved: {file_name}")
+
+    def load(self, file_name='model.h5'):
+        model_folder_path = './model'
+        if not os.path.exists(model_folder_path):
+            os.makedirs(model_folder_path)
+
+        file_name = os.path.join(model_folder_path, file_name)
+        self.model.load_weights(file_name)
+        print(f"Model Loaded: {file_name}")
 
 
 class QTrainer:
