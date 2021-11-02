@@ -1,4 +1,3 @@
-import torch
 import random
 import numpy as np
 from collections import deque
@@ -17,8 +16,8 @@ class Agent:
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(11, 256, 3)
-        self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+        self.model = Linear_QNet(11, 256, 3, lr=LR)
+        self.trainer = QTrainer(self.model, gamma=self.gamma)
 
 
     def get_state(self, game):
@@ -92,9 +91,9 @@ class Agent:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = torch.tensor(state, dtype=torch.float)
-            prediction = self.model(state0)
-            move = torch.argmax(prediction).item()
+            state0 = np.array(state, dtype=np.float)[np.newaxis,...]
+            prediction = self.model.predict(state0)
+            move = np.argmax(prediction, axis=1)[0]
             final_move[move] = 1
 
         return final_move
