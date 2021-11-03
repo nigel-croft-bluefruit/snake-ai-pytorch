@@ -3,6 +3,7 @@ from game import SnakeGameAI
 from helper import plot
 import argparse
 import sys
+import os
 
 def train(model_name, reload=None):
     plot_scores = []
@@ -42,7 +43,7 @@ def train(model_name, reload=None):
             game.reset()
             agent.n_games += 1
             
-            if agent.epsilon > 0:
+            if agent.epsilon > 5:
                 agent.epsilon -= 1
 
             agent.train_long_memory(number_of_steps)
@@ -110,5 +111,5 @@ def main():
         train(args.model_name, args.reload)
 
 if __name__ == '__main__':
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     main()
-

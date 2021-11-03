@@ -24,7 +24,7 @@ class Agent:
         if reload:
             print("Loaded")
             self.model.load(reload)
-            self.epsilon = 0
+            self.epsilon = 5
 
     def get_state(self, game):
         head = game.snake[0]
@@ -96,7 +96,7 @@ class Agent:
         # random moves: tradeoff exploration / exploitation
         #self.epsilon = 80 - self.n_games
         final_move = [0,0,0]
-        if random.randint(0, 200) < self.epsilon:
+        if random.randint(0, 100) < self.epsilon:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
