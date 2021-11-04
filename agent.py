@@ -6,6 +6,13 @@ from collections import deque
 from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
 from helper import plot
+from enum import Enum
+
+class TurnDirection(Enum):
+    RIGHT = 1
+    LEFT = 2
+    STRAIGHT = 3
+
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -26,6 +33,51 @@ class Agent:
             self.model.load(reload)
             self.epsilon = 5
 
+    def _get_danger(self, game, turn_direction : TurnDirection):
+        LOOK_AHEAD = 2
+
+        dir_l = game.direction == Direction.LEFT
+        dir_r = game.direction == Direction.RIGHT
+        dir_u = game.direction == Direction.UP
+        dir_d = game.direction == Direction.DOWN
+
+        head = game.snake[0]
+
+
+        rating = 0
+        for i in range(LOOK_AHEAD):
+            offset = 20 * (i+1)
+            point_l = Point(head.x - offset, head.y)
+            point_r = Point(head.x + offset, head.y)
+            point_u = Point(head.x, head.y - offset)
+            point_d = Point(head.x, head.y + offset)
+
+            if turn_direction == TurnDirection.STRAIGHT:
+                rating +=(
+                        (dir_r and game.is_collision(point_r)) or 
+                        (dir_l and game.is_collision(point_l)) or 
+                        (dir_u and game.is_collision(point_u)) or 
+                        (dir_d and game.is_collision(point_d))) * (LOOK_AHEAD - i)
+
+            elif turn_direction == TurnDirection.RIGHT:
+                rating +=(
+                        (dir_u and game.is_collision(point_r)) or 
+                        (dir_d and game.is_collision(point_l)) or 
+                        (dir_l and game.is_collision(point_u)) or 
+                        (dir_r and game.is_collision(point_d))) * (LOOK_AHEAD - i)
+            else:
+                # LEFT
+                rating +=(
+                        (dir_d and game.is_collision(point_r)) or 
+                        (dir_u and game.is_collision(point_l)) or 
+                        (dir_r and game.is_collision(point_u)) or 
+                        (dir_l and game.is_collision(point_d))) * (LOOK_AHEAD - i)
+
+        return rating
+
+
+       
+
     def get_state(self, game):
         head = game.snake[0]
         point_l = Point(head.x - 20, head.y)
@@ -40,22 +92,13 @@ class Agent:
 
         state = [
             # Danger straight
-            (dir_r and game.is_collision(point_r)) or 
-            (dir_l and game.is_collision(point_l)) or 
-            (dir_u and game.is_collision(point_u)) or 
-            (dir_d and game.is_collision(point_d)),
+            self._get_danger(game, TurnDirection.STRAIGHT),
 
             # Danger right
-            (dir_u and game.is_collision(point_r)) or 
-            (dir_d and game.is_collision(point_l)) or 
-            (dir_l and game.is_collision(point_u)) or 
-            (dir_r and game.is_collision(point_d)),
+            self._get_danger(game, TurnDirection.RIGHT),
 
             # Danger left
-            (dir_d and game.is_collision(point_r)) or 
-            (dir_u and game.is_collision(point_l)) or 
-            (dir_r and game.is_collision(point_u)) or 
-            (dir_l and game.is_collision(point_d)),
+            self._get_danger(game, TurnDirection.LEFT),
             
             # Move direction
             dir_l,
@@ -64,10 +107,10 @@ class Agent:
             dir_d,
             
             # Food location 
-            game.food.x < game.head.x,  # food left
-            game.food.x > game.head.x,  # food right
-            game.food.y < game.head.y,  # food up
-            game.food.y > game.head.y  # food down
+            (game.food.x < game.head.x) * 15,  # food left
+            (game.food.x > game.head.x) * 15,  # food right
+            (game.food.y < game.head.y) * 15,  # food up
+            (game.food.y > game.head.y) * 15  # food down
             ]
 
         return np.array(state, dtype=int)
