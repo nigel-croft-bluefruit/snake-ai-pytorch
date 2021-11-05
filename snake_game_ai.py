@@ -4,6 +4,7 @@ from helper import plot
 import argparse
 import sys
 
+
 def train(model_name, reload=None):
     plot_scores = []
     plot_mean_scores = []
@@ -41,7 +42,7 @@ def train(model_name, reload=None):
             # train long memory, plot result
             game.reset()
             agent.n_games += 1
-            
+
             if agent.epsilon > 0:
                 agent.epsilon -= 1
 
@@ -97,11 +98,15 @@ def demo(filename):
             plot_mean_scores.append(mean_score)
             plot(plot_scores, plot_mean_scores)
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default="model.h5", help='Set name of model for autosave.')
-    parser.add_argument('--reload', type=str, help='Load a previously saved model.')
-    parser.add_argument('--demo', type=str, help='Load up a demo using a saved model.')
+    parser.add_argument('--model_name', type=str, default="model.h5",
+                        help='Set name of model for autosave.')
+    parser.add_argument('--reload', type=str,
+                        help='Load a previously saved model.')
+    parser.add_argument('--demo', type=str,
+                        help='Load up a demo using a saved model.')
     args = parser.parse_args(sys.argv[1:])
 
     if args.demo:
@@ -109,6 +114,6 @@ def main():
     else:
         train(args.model_name, args.reload)
 
+
 if __name__ == '__main__':
     main()
-

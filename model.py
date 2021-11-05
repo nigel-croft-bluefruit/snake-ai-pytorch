@@ -20,12 +20,11 @@ class Linear_QNet():
                            optimizer=Adam(lr=lr),
                            metrics=["accuracy"])
 
-
     def predict(self, state):
         return self.model.predict(state)
 
     def predict_one(self, state):
-        return self.model.predict(state[np.newaxis,...])[0]
+        return self.model.predict(state[np.newaxis, ...])[0]
 
     def __call__(self, state):
         return self.model.predict(state)
@@ -42,7 +41,7 @@ class Linear_QNet():
 
         file_name = os.path.join(model_folder_path, file_name)
         #torch.save(self.state_dict(), file_name)
-        self.model.save(file_name);
+        self.model.save(file_name)
         print(f"Model Saved: {file_name}")
 
     def load(self, file_name='model.h5'):
@@ -84,11 +83,10 @@ class QTrainer:
         indexes = np.arange(state.shape[0])
         max_next_q = np.amax(self.model.predict(next_state), axis=1)
         action_index = np.argmax(action, axis=1)
-        target[indexes, action_index[indexes]] = reward + self.gamma * np.logical_not(done) * max_next_q
+        target[indexes, action_index[indexes]] = reward + \
+            self.gamma * np.logical_not(done) * max_next_q
 
         self.model.model.fit(state, target, verbose=0)
-
-
 
         # current_q = self._current_predict(input_states)
         # next_q = self._target_predict(next_input_states)
