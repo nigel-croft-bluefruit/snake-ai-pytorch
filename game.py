@@ -72,19 +72,26 @@ class SnakeGameAI:
         # 2. move
         self._move(action) # update the head
         self.snake.insert(0, self.head)
-        
-        # 3. check if game over
+
         reward = 0
+        if not np.array_equal(action, [1, 0, 0]):
+            reward = -1 #small penalty for making a turn
+
+        # 3. check if game over
         game_over = False
-        if self.is_collision() or self.frame_iteration > 100*len(self.snake):
+        if self.is_collision():
             game_over = True
-            reward = -10
+            reward = -30
+            return reward, game_over, self.score
+
+        if self.frame_iteration > 100*len(self.snake):
+            game_over = True
             return reward, game_over, self.score
 
         # 4. place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = 10
+            reward = 20
             self._place_food()
         else:
             self.snake.pop()
@@ -96,6 +103,15 @@ class SnakeGameAI:
         return reward, game_over, self.score
 
 
+    def is_snake_collision(self, pt=None):
+        if pt is None:
+            pt = self.head
+        # hits itself
+        if pt in self.snake[1:]:
+            return True
+
+        return False
+
     def is_collision(self, pt=None):
         if pt is None:
             pt = self.head
@@ -103,10 +119,7 @@ class SnakeGameAI:
         if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0:
             return True
         # hits itself
-        if pt in self.snake[1:]:
-            return True
-
-        return False
+        return self.is_snake_collision(pt)
 
 
     def _update_ui(self):

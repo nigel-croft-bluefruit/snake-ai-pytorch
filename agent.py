@@ -34,7 +34,7 @@ class Agent:
             self.epsilon = 5
 
     def _get_danger(self, game, turn_direction : TurnDirection):
-        LOOK_AHEAD = 2
+        LOOK_AHEAD = 3
 
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
@@ -45,7 +45,39 @@ class Agent:
 
 
         rating = 0
-        for i in range(LOOK_AHEAD):
+        offset = 20
+        point_l = Point(head.x - offset, head.y)
+        point_r = Point(head.x + offset, head.y)
+        point_u = Point(head.x, head.y - offset)
+        point_d = Point(head.x, head.y + offset)
+
+        # Look for collision danger for next move, include walls as well as bits of snake
+        if turn_direction == TurnDirection.STRAIGHT:
+            rating +=(
+                    (dir_r and game.is_collision(point_r)) or 
+                    (dir_l and game.is_collision(point_l)) or 
+                    (dir_u and game.is_collision(point_u)) or 
+                    (dir_d and game.is_collision(point_d)))
+
+        elif turn_direction == TurnDirection.RIGHT:
+            rating +=(
+                    (dir_u and game.is_collision(point_r)) or 
+                    (dir_d and game.is_collision(point_l)) or 
+                    (dir_l and game.is_collision(point_u)) or 
+                    (dir_r and game.is_collision(point_d)))
+        else:
+            # LEFT
+            rating +=(
+                    (dir_d and game.is_collision(point_r)) or 
+                    (dir_u and game.is_collision(point_l)) or 
+                    (dir_r and game.is_collision(point_u)) or 
+                    (dir_l and game.is_collision(point_d)))
+
+        if rating:
+            return rating
+
+        ## ok, no immediate collision danger, now look ahead, but only for bits of snake, ignore walls
+        for i in range(1, LOOK_AHEAD):
             offset = 20 * (i+1)
             point_l = Point(head.x - offset, head.y)
             point_r = Point(head.x + offset, head.y)
@@ -54,36 +86,35 @@ class Agent:
 
             if turn_direction == TurnDirection.STRAIGHT:
                 rating +=(
-                        (dir_r and game.is_collision(point_r)) or 
-                        (dir_l and game.is_collision(point_l)) or 
-                        (dir_u and game.is_collision(point_u)) or 
-                        (dir_d and game.is_collision(point_d))) * (LOOK_AHEAD - i)
+                        (dir_r and game.is_snake_collision(point_r)) or 
+                        (dir_l and game.is_snake_collision(point_l)) or 
+                        (dir_u and game.is_snake_collision(point_u)) or 
+                        (dir_d and game.is_snake_collision(point_d))) * (LOOK_AHEAD - i)
 
             elif turn_direction == TurnDirection.RIGHT:
                 rating +=(
-                        (dir_u and game.is_collision(point_r)) or 
-                        (dir_d and game.is_collision(point_l)) or 
-                        (dir_l and game.is_collision(point_u)) or 
-                        (dir_r and game.is_collision(point_d))) * (LOOK_AHEAD - i)
+                        (dir_u and game.is_snake_collision(point_r)) or 
+                        (dir_d and game.is_snake_collision(point_l)) or 
+                        (dir_l and game.is_snake_collision(point_u)) or 
+                        (dir_r and game.is_snake_collision(point_d))) * (LOOK_AHEAD - i)
             else:
                 # LEFT
                 rating +=(
-                        (dir_d and game.is_collision(point_r)) or 
-                        (dir_u and game.is_collision(point_l)) or 
-                        (dir_r and game.is_collision(point_u)) or 
-                        (dir_l and game.is_collision(point_d))) * (LOOK_AHEAD - i)
+                        (dir_d and game.is_snake_collision(point_r)) or 
+                        (dir_u and game.is_snake_collision(point_l)) or 
+                        (dir_r and game.is_snake_collision(point_u)) or 
+                        (dir_l and game.is_snake_collision(point_d))) * (LOOK_AHEAD - i)
 
-        return rating
+            if rating:
+                break
+
+        return rating / LOOK_AHEAD
 
 
        
 
     def get_state(self, game):
         head = game.snake[0]
-        point_l = Point(head.x - 20, head.y)
-        point_r = Point(head.x + 20, head.y)
-        point_u = Point(head.x, head.y - 20)
-        point_d = Point(head.x, head.y + 20)
         
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
@@ -107,13 +138,13 @@ class Agent:
             dir_d,
             
             # Food location 
-            (game.food.x < game.head.x) * 15,  # food left
-            (game.food.x > game.head.x) * 15,  # food right
-            (game.food.y < game.head.y) * 15,  # food up
-            (game.food.y > game.head.y) * 15  # food down
+            (game.food.x < game.head.x),  # food left
+            (game.food.x > game.head.x),  # food right
+            (game.food.y < game.head.y),  # food up
+            (game.food.y > game.head.y)   # food down
             ]
 
-        return np.array(state, dtype=int)
+        return np.array(state, dtype=float)
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done)) # popleft if MAX_MEMORY is reached
