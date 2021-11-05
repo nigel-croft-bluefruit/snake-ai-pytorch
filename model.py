@@ -21,13 +21,13 @@ class Linear_QNet():
                            metrics=["accuracy"])
 
     def predict(self, state):
-        return self.model.predict(state)
+        return self.model(state)
 
     def predict_one(self, state):
-        return self.model.predict(state[np.newaxis, ...])[0]
+        return self.model(state[np.newaxis, ...])[0]
 
     def __call__(self, state):
-        return self.model.predict(state)
+        return self.model(state)
 
     # def forward(self, x):
     #     x = F.relu(self.linear1(x))
