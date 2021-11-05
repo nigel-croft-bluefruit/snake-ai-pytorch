@@ -5,7 +5,7 @@ import argparse
 import sys
 
 
-def train(model_name, reload=None):
+def train(model_name, headless, reload=None):
     plot_scores = []
     plot_mean_scores = []
     total_score = 0
@@ -23,7 +23,7 @@ def train(model_name, reload=None):
 
         # perform move and get new state
 
-        reward, done, score = game.play_step(final_move)
+        reward, done, score = game.play_step(final_move, headless)
 
         state_new = agent.get_state(game)
 
@@ -52,13 +52,16 @@ def train(model_name, reload=None):
                 record = score
                 agent.model.save(model_name)
 
-            print('Game', agent.n_games, 'Score', score, 'Record:', record)
-
-            plot_scores.append(score)
             total_score += score
             mean_score = total_score / agent.n_games
-            plot_mean_scores.append(mean_score)
-            plot(plot_scores, plot_mean_scores)
+
+            print(
+                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.1f}')
+
+            if not headless:
+                plot_scores.append(score)
+                plot_mean_scores.append(mean_score)
+                plot(plot_scores, plot_mean_scores)
 
             number_of_steps = 0
 
@@ -80,7 +83,7 @@ def demo(filename):
         final_move = agent.get_action(state_old)
 
         # perform move and get new state
-        reward, done, score = game.play_step(final_move)
+        reward, done, score = game.play_step(final_move, false)
 
         if done:
             # train long memory, plot result
@@ -107,12 +110,14 @@ def main():
                         help='Load a previously saved model.')
     parser.add_argument('--demo', type=str,
                         help='Load up a demo using a saved model.')
+    parser.add_argument('--headless', action='store_true',
+                        help='Run training without UI (much faster!)')
     args = parser.parse_args(sys.argv[1:])
 
     if args.demo:
         demo(args.demo)
     else:
-        train(args.model_name, args.reload)
+        train(args.model_name, args.headless, args.reload)
 
 
 if __name__ == '__main__':

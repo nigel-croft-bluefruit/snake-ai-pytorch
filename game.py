@@ -26,7 +26,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
-SPEED = 400
+SPEED = 50
 
 
 class SnakeGameAI:
@@ -61,7 +61,7 @@ class SnakeGameAI:
         if self.food in self.snake:
             self._place_food()
 
-    def play_step(self, action):
+    def play_step(self, action, headless):
         self.frame_iteration += 1
         # 1. collect user input
         for event in pygame.event.get():
@@ -90,8 +90,10 @@ class SnakeGameAI:
             self.snake.pop()
 
         # 5. update ui and clock
-        self._update_ui()
-        self.clock.tick(SPEED)
+        if not headless:
+            self._update_ui()
+            self.clock.tick(SPEED)
+
         # 6. return game over and score
         return reward, game_over, self.score
 
