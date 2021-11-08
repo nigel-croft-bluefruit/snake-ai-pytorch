@@ -84,7 +84,7 @@ def demo(filename):
         final_move = agent.get_action(state_old)
 
         # perform move and get new state
-        reward, done, score = game.play_step(final_move, false)
+        reward, done, score = game.play_step(final_move, False)
 
         if done:
             # train long memory, plot result
