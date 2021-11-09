@@ -53,6 +53,9 @@ def train(model_name, headless, reload=None):
                 record = score
                 agent.model.save(model_name)
 
+            if agent.n_games % 100 ==0:
+                agent.model.save('reg_'+ model_name)
+
             total_score += score
             mean_score = total_score / agent.n_games
 
