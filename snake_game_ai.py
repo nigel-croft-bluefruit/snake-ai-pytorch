@@ -44,7 +44,7 @@ def train(model_name, headless, reload=None):
             game.reset()
             agent.n_games += 1
 
-            if agent.epsilon > 5:
+            if agent.epsilon > 0:
                 agent.epsilon -= 1
 
             agent.train_long_memory(number_of_steps)

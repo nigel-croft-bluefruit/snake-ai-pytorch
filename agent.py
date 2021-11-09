@@ -22,7 +22,7 @@ class Agent:
 
     def __init__(self, reload):
         self.n_games = 0
-        self.epsilon = 80 # randomness
+        self.epsilon = 160 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
         self.model = Linear_QNet(11, 256, 3, lr=LR)
@@ -170,12 +170,12 @@ class Agent:
         # random moves: tradeoff exploration / exploitation
         #self.epsilon = 80 - self.n_games
         final_move = [0,0,0]
-        if random.randint(0, 100) < self.epsilon:
+        if random.randint(0, 200) < self.epsilon:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
             state0 = np.array(state, dtype=np.float)[np.newaxis,...]
-            prediction = self.model.predict(state0)
+            prediction = self.model(state0)
             move = np.argmax(prediction, axis=1)[0]
             final_move[move] = 1
 
