@@ -34,7 +34,7 @@ class Agent:
             self.epsilon = 5
 
     def _get_danger(self, game, turn_direction : TurnDirection):
-        LOOK_AHEAD = 3
+        LOOK_AHEAD = 5
 
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT

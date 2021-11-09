@@ -67,7 +67,7 @@ def train(model_name, headless, reload=None):
             number_of_steps = 0
 
 
-def demo(filename):
+def demo(filename, headless=False):
     plot_scores = []
     plot_mean_scores = []
     total_score = 0
@@ -75,6 +75,7 @@ def demo(filename):
     agent = Agent(filename)
     game = SnakeGameAI()
     number_of_steps = 0
+    agent.epsilon = -1
 
     while True:
         # get old state
@@ -84,7 +85,7 @@ def demo(filename):
         final_move = agent.get_action(state_old)
 
         # perform move and get new state
-        reward, done, score = game.play_step(final_move, False)
+        reward, done, score = game.play_step(final_move, headless)
 
         if done:
             # train long memory, plot result
@@ -94,13 +95,16 @@ def demo(filename):
             if score > record:
                 record = score
 
-            print('Game', agent.n_games, 'Score', score, 'Record:', record)
-
-            plot_scores.append(score)
             total_score += score
             mean_score = total_score / agent.n_games
-            plot_mean_scores.append(mean_score)
-            plot(plot_scores, plot_mean_scores)
+
+            print(
+                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.1f}')
+
+            if not headless:
+                plot_scores.append(score)
+                plot_mean_scores.append(mean_score)
+                plot(plot_scores, plot_mean_scores)
 
 
 def main():
@@ -116,11 +120,11 @@ def main():
     args = parser.parse_args(sys.argv[1:])
 
     if args.demo:
-        demo(args.demo)
+        demo(args.demo, args.headless)
     else:
         train(args.model_name, args.headless, args.reload)
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+    #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     main()

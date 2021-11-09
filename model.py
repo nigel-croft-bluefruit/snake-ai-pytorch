@@ -76,12 +76,12 @@ class QTrainer:
             done = np.expand_dims(done, axis=0)
 
         # 1: predicted Q values with current state
-        pred = self.model.predict(state)
+        pred = self.model(state)
 
         target = np.copy(pred)
 
         indexes = np.arange(state.shape[0])
-        max_next_q = np.amax(self.model.predict(next_state), axis=1)
+        max_next_q = np.amax(self.model(next_state), axis=1)
         action_index = np.argmax(action, axis=1)
         target[indexes, action_index[indexes]] = reward + \
             self.gamma * np.logical_not(done) * max_next_q
