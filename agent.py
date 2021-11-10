@@ -16,13 +16,14 @@ class TurnDirection(Enum):
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
-LR = 0.001
+LR = 0.0001
 
 class Agent:
 
     def __init__(self, reload):
         self.n_games = 0
-        self.epsilon = 160 # randomness
+        # self.epsilon = 160 # randomness
+        self.epsilon = 300 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
         self.model = Linear_QNet(11, 256,(640//20, 480//20, 2), 3, lr=LR)
@@ -198,13 +199,13 @@ class Agent:
         # random moves: tradeoff exploration / exploitation
         #self.epsilon = 80 - self.n_games
         final_move = [0,0,0]
-        if random.randint(0, 200) < self.epsilon:
+        if random.randint(0, 300) < self.epsilon:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
             state0 = np.array(state[0], dtype=np.float)[np.newaxis,...]
             state1 = np.array(state[1], dtype=np.float)[np.newaxis,...]
-            prediction = self.model([state0, state1])
+            prediction = self.model(state1)
             move = np.argmax(prediction, axis=1)[0]
             final_move[move] = 1
 

@@ -21,20 +21,21 @@ class Linear_QNet():
         x2 = Conv2D(64, 3, padding='same', strides=2, activation='relu')(x2)
         x2 = Flatten()(x2)
 
-        combined = Concatenate()([x1,x2])
+        # combined = Concatenate()([x1,x2])
 
-        output = Dense(output_size, activation='linear')(combined)
+        output = Dense(output_size, activation='linear')(x2)
 
-        self.model = Model(inputs=[state_input, grid_input], outputs=output)
+        # self.model = Model(inputs=[state_input, grid_input], outputs=output)
+        self.model = Model(inputs=grid_input, outputs=output)
         self.model.compile(loss="mean_squared_error",
                            optimizer=Adam(lr=lr),
                            metrics=["accuracy"])
 
     def predict(self, state):
-        return self.model(state)
+        return self.model(state[1])
 
     def predict_one(self, state):
-        return self.model(state[np.newaxis, ...])[0]
+        return self.model(state[1][np.newaxis, ...])[0]
 
     def __call__(self, state):
         return self.model(state)
@@ -94,17 +95,17 @@ class QTrainer:
             done = np.expand_dims(done, axis=0)
 
         # 1: predicted Q values with current state
-        pred = self.model([state0, state1])
+        pred = self.model(state1)
 
         target = np.copy(pred)
 
         indexes = np.arange(state0.shape[0])
-        max_next_q = np.amax(self.model([next_state0, next_state1]), axis=1)
+        max_next_q = np.amax(self.model(next_state1), axis=1)
         action_index = np.argmax(action, axis=1)
         target[indexes, action_index[indexes]] = reward + \
             self.gamma * np.logical_not(done) * max_next_q
 
-        hist = self.model.model.fit([state0, state1], target, verbose=0)
+        hist = self.model.model.fit(state1, target, verbose=0)
 
         print(f"Accuracy: {hist.history['accuracy'][0]:0.6f} Loss:{hist.history['loss'][0]:0.6f}")
 
