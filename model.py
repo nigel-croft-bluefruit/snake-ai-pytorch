@@ -1,21 +1,31 @@
 import os
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, InputLayer
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, Concatenate, Input
 import numpy as np
 
 
 class Linear_QNet():
-    def __init__(self, input_size, hidden_size, output_size, lr):
+    def __init__(self, input_size, hidden_size, grid_size, output_size, lr):
         # self.linear1 = nn.Linear(input_size, hidden_size)
         # self.linear2 = nn.Linear(hidden_size, output_size)
         self.input_size = input_size
         self.output_size = output_size
 
-        self.model = Sequential()
-        self.model.add(InputLayer(input_shape=(input_size,), name='x_input'))
-        self.model.add(Dense(hidden_size, activation="relu"))
-        self.model.add(Dense(output_size, activation='linear'))
+        state_input = Input(shape=(input_size,), name='x1_input')
+        x1 = Dense(hidden_size, activation="relu")(state_input)
+
+        grid_input = Input(shape=grid_size, name='x2_input')
+        x2 = Conv2D(16, 3, padding='valid', strides=1, activation='relu')(grid_input)
+        x2 = Conv2D(32, 3, padding='same', strides=2, activation='relu')(x2)
+        x2 = Conv2D(64, 3, padding='same', strides=2, activation='relu')(x2)
+        x2 = Flatten()(x2)
+
+        combined = Concatenate()([x1,x2])
+
+        output = Dense(output_size, activation='linear')(combined)
+
+        self.model = Model(inputs=[state_input, grid_input], outputs=output)
         self.model.compile(loss="mean_squared_error",
                            optimizer=Adam(lr=lr),
                            metrics=["accuracy"])
@@ -60,33 +70,43 @@ class QTrainer:
         self.model = model
 
     def train_step(self, state, action, reward, next_state, done):
-        state = np.array(state, dtype=np.float)
-        next_state = np.array(next_state, dtype=np.float)
+        state0, state1 = zip(*state)
+        state0 = np.array(state0, dtype=np.float)
+        state1 = np.array(state1, dtype=np.float)
+
+        next_state0, next_state1 = zip(*next_state)
+        next_state0 = np.array(next_state0, dtype=np.float)
+        next_state1 = np.array(next_state1, dtype=np.float)
+
         action = np.array(action, dtype=np.long)
         reward = np.array(reward, dtype=np.float)
         done = np.array(done)
         # (n, x)
 
-        if len(state.shape) == 1:
+        if len(state0.shape) == 1:
             # (1, x)
-            state = np.expand_dims(state, axis=0)
-            next_state = np.expand_dims(next_state, axis=0)
+            state0 = np.expand_dims(state0, axis=0)
+            state1 = np.expand_dims(state1, axis=0)
+            next_state0 = np.expand_dims(next_state0, axis=0)
+            next_state1 = np.expand_dims(next_state1, axis=0)
             action = np.expand_dims(action, axis=0)
             reward = np.expand_dims(reward, axis=0)
             done = np.expand_dims(done, axis=0)
 
         # 1: predicted Q values with current state
-        pred = self.model(state)
+        pred = self.model([state0, state1])
 
         target = np.copy(pred)
 
-        indexes = np.arange(state.shape[0])
-        max_next_q = np.amax(self.model(next_state), axis=1)
+        indexes = np.arange(state0.shape[0])
+        max_next_q = np.amax(self.model([next_state0, next_state1]), axis=1)
         action_index = np.argmax(action, axis=1)
         target[indexes, action_index[indexes]] = reward + \
             self.gamma * np.logical_not(done) * max_next_q
 
-        self.model.model.fit(state, target, verbose=0)
+        hist = self.model.model.fit([state0, state1], target, verbose=0)
+
+        print(f"Accuracy: {hist.history['accuracy'][0]:0.6f} Loss:{hist.history['loss'][0]:0.6f}")
 
         # current_q = self._current_predict(input_states)
         # next_q = self._target_predict(next_input_states)

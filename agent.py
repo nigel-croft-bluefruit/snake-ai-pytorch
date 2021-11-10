@@ -25,7 +25,7 @@ class Agent:
         self.epsilon = 160 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(11, 256, 3, lr=LR)
+        self.model = Linear_QNet(11, 256,(640//20, 480//20, 2), 3, lr=LR)
         self.trainer = QTrainer(self.model, gamma=self.gamma)
 
         if reload:
@@ -122,6 +122,7 @@ class Agent:
         dir_d = game.direction == Direction.DOWN
 
         state = [
+            [
             # Danger straight
             self._get_danger(game, TurnDirection.STRAIGHT),
 
@@ -142,9 +143,36 @@ class Agent:
             (game.food.x > game.head.x),  # food right
             (game.food.y < game.head.y),  # food up
             (game.food.y > game.head.y)   # food down
-            ]
+            ],
+            self.get_game_grid(game)
+        ]
 
-        return np.array(state, dtype=float)
+        return state
+
+    def get_game_grid(self, game):
+        CELL_SIZE = 20
+        SNAKE_HEAD = 1
+        SNAKE_BODY = 2
+        APPLE = 1
+
+        width = game.w // CELL_SIZE
+        height = game.h // CELL_SIZE
+        grid = np.zeros((width, height, 2))
+        for pt in game.snake:
+            x = int(pt.x)//CELL_SIZE
+            y = int(pt.y)//CELL_SIZE
+            if x > 0 and y > 0 and x < width and y < height:
+                grid[x, y, 0] = SNAKE_BODY
+        
+        head = game.snake[0]
+        x = int(head.x)//CELL_SIZE
+        y = int(head.y)//CELL_SIZE
+        if x > 0 and y > 0 and x < width and y < height:
+            grid[x, y, 0] = SNAKE_HEAD
+
+        grid[int(game.food.x)//CELL_SIZE, int(game.food.y)//CELL_SIZE, 1] = APPLE
+
+        return grid
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done)) # popleft if MAX_MEMORY is reached
@@ -174,8 +202,9 @@ class Agent:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = np.array(state, dtype=np.float)[np.newaxis,...]
-            prediction = self.model(state0)
+            state0 = np.array(state[0], dtype=np.float)[np.newaxis,...]
+            state1 = np.array(state[1], dtype=np.float)[np.newaxis,...]
+            prediction = self.model([state0, state1])
             move = np.argmax(prediction, axis=1)[0]
             final_move[move] = 1
 
