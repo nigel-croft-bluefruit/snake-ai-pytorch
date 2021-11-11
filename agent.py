@@ -33,6 +33,58 @@ class Agent:
             self.model.load(reload)
             self.epsilon = 5
 
+    def _new_dir(self, current_direction : Direction, turn_direction : TurnDirection):
+        clock_wise = [Direction.RIGHT, Direction.DOWN,
+                Direction.LEFT, Direction.UP]
+        idx = clock_wise.index(current_direction)
+
+        if turn_direction == TurnDirection.STRAIGHT:
+            new_dir = current_direction  # no change
+        elif turn_direction == TurnDirection.RIGHT:
+            next_idx = (idx + 1) % 4
+            new_dir = clock_wise[next_idx]  # right turn r -> d -> l -> u
+        else:  # LEFT
+            next_idx = (idx - 1) % 4
+            new_dir = clock_wise[next_idx]  # left turn r -> u -> l -> d
+
+        self.direction = new_dir
+
+    def _get_snake_collision_danger(self, game, travel_direction : Direction, turn_direction : TurnDirection, head, offset):
+        dir_l = travel_direction == Direction.LEFT
+        dir_r = travel_direction == Direction.RIGHT
+        dir_u = travel_direction == Direction.UP
+        dir_d = travel_direction == Direction.DOWN
+
+        point_l = Point(head.x - offset, head.y)
+        point_r = Point(head.x + offset, head.y)
+        point_u = Point(head.x, head.y - offset)
+        point_d = Point(head.x, head.y + offset)
+
+        rating = 0
+
+        if turn_direction == TurnDirection.STRAIGHT:
+            rating +=(
+                    (dir_r and game.is_snake_collision(point_r)) or 
+                    (dir_l and game.is_snake_collision(point_l)) or 
+                    (dir_u and game.is_snake_collision(point_u)) or 
+                    (dir_d and game.is_snake_collision(point_d)))
+
+        elif turn_direction == TurnDirection.RIGHT:
+            rating +=(
+                    (dir_u and game.is_snake_collision(point_r)) or 
+                    (dir_d and game.is_snake_collision(point_l)) or 
+                    (dir_l and game.is_snake_collision(point_u)) or 
+                    (dir_r and game.is_snake_collision(point_d)))
+        else:
+            # LEFT
+            rating +=(
+                    (dir_d and game.is_snake_collision(point_r)) or 
+                    (dir_u and game.is_snake_collision(point_l)) or 
+                    (dir_r and game.is_snake_collision(point_u)) or 
+                    (dir_l and game.is_snake_collision(point_d)))
+
+        return rating
+
     def _get_danger(self, game, turn_direction : TurnDirection):
         LOOK_AHEAD = 5
 
@@ -85,6 +137,7 @@ class Agent:
             point_d = Point(head.x, head.y + offset)
 
             if turn_direction == TurnDirection.STRAIGHT:
+                # rating += self._get_snake_collision_danger(game, game.direction, TurnDirection.STRAIGHT, head, offset)
                 rating +=(
                         (dir_r and game.is_snake_collision(point_r)) or 
                         (dir_l and game.is_snake_collision(point_l)) or 
