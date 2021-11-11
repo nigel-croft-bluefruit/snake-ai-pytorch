@@ -86,7 +86,9 @@ class QTrainer:
         target[indexes, action_index[indexes]] = reward + \
             self.gamma * np.logical_not(done) * max_next_q
 
-        self.model.model.fit(state, target, verbose=0)
+        hist = self.model.model.fit(state, target, verbose=0)
+
+        print(f"Accuracy: {hist.history['accuracy'][0]:0.6f} Loss:{hist.history['loss'][0]:0.6f}")
 
         # current_q = self._current_predict(input_states)
         # next_q = self._target_predict(next_input_states)

@@ -15,6 +15,9 @@ def train(model_name, headless, reload=None):
     game = SnakeGameAI()
     number_of_steps = 0
 
+    with open('training.csv', 'w') as f:
+        f.write(f'Game,Score,Steps,Epsilon\n')
+
     while True:
         # get old state
         state_old = agent.get_state(game)
@@ -53,11 +56,17 @@ def train(model_name, headless, reload=None):
                 record = score
                 agent.model.save(model_name)
 
+            if agent.n_games % 100 ==0:
+                agent.model.save('reg_'+ model_name)
+
             total_score += score
             mean_score = total_score / agent.n_games
 
             print(
                 f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.1f}')
+
+            with open('training.csv', 'a') as f:
+                f.write(f'{agent.n_games},{score},{number_of_steps},{agent.epsilon}\n')
 
             if not headless:
                 plot_scores.append(score)
@@ -76,6 +85,9 @@ def demo(filename, headless=False):
     game = SnakeGameAI()
     number_of_steps = 0
     agent.epsilon = -1
+
+    with open('test.csv', 'w') as f:
+        f.write(f'Game,Score,Steps,Epsilon\n')
 
     while True:
         # get old state
@@ -100,6 +112,9 @@ def demo(filename, headless=False):
 
             print(
                 f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.1f}')
+
+            with open('test.csv', 'a') as f:
+                f.write(f'{agent.n_games},{score},{number_of_steps},{agent.epsilon}\n')
 
             if not headless:
                 plot_scores.append(score)
