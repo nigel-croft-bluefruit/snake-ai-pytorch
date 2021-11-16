@@ -41,6 +41,10 @@ class SnakeGameAI:
         pygame.display.set_caption('Snake')
         self.clock = pygame.time.Clock()
         self.reset()
+        self.APPLE = pygame.image.load("red-apple.png")
+        self.APPLE = pygame.transform.scale(self.APPLE,(BLOCK_SIZE, BLOCK_SIZE))
+        self.HEAD = pygame.image.load("head.png")
+        self.HEAD = pygame.transform.scale(self.HEAD,(30, 30))
 
     def reset(self):
         # init game state
@@ -130,17 +134,25 @@ class SnakeGameAI:
         self.display.fill(BLACK)
 
         pt = self.snake[0]
-        pygame.draw.circle(self.display, color=GREEN1, center=(pt.x+BLOCK_SIZE/2, pt.y+BLOCK_SIZE/2), radius=BLOCK_SIZE/2)
+        if self.direction == Direction.RIGHT:
+            head_img = pygame.transform.rotate(self.HEAD,-90)
+        elif self.direction == Direction.LEFT:
+            head_img = pygame.transform.rotate(self.HEAD,90)
+        elif self.direction == Direction.DOWN:
+            head_img = pygame.transform.rotate(self.HEAD,180)
+        else:
+            head_img = self.HEAD
+
+        self.display.blit(head_img,(pt.x-5,pt.y-5))
+
         for pt in self.snake[1:]:
-            # pygame.draw.rect(self.display, BLUE1, pygame.Rect(
-            #     pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
-            # pygame.draw.rect(self.display, BLUE2,
-            #                  pygame.Rect(pt.x+4, pt.y+4, 12, 12))
             pygame.draw.circle(self.display, color=GREEN1, center=(pt.x+BLOCK_SIZE/2, pt.y+BLOCK_SIZE/2), radius=BLOCK_SIZE/2 )
             pygame.draw.circle(self.display, color=GREEN2, center=(pt.x+BLOCK_SIZE/2, pt.y+BLOCK_SIZE/2), radius=BLOCK_SIZE/3, width=3 )
 
-        pygame.draw.rect(self.display, RED, pygame.Rect(
-            self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
+        # pygame.draw.rect(self.display, RED, pygame.Rect(
+        #     self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
+
+        self.display.blit(self.APPLE, (self.food.x, self.food.y))
 
         text = font.render("Score: " + str(self.score), True, WHITE)
         self.display.blit(text, [0, 0])
