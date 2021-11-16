@@ -24,6 +24,8 @@ RED = (200, 0, 0)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
+GREEN1 = (66, 245, 102)
+GREEN2 = (40,158,63)
 
 BLOCK_SIZE = 20
 SPEED = 30
@@ -74,14 +76,16 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
 
         reward = 0
-        if not np.array_equal(action, [1, 0, 0]):
-            reward = -1 #small penalty for making a turn
+        # if not np.array_equal(action, [1, 0, 0]):
+        #     reward = -1 #small penalty for making a turn
 
         # 3. check if game over
         game_over = False
         if self.is_collision():
             game_over = True
             reward = -30
+            if self.is_snake_collision():
+                reward = -40
             return reward, game_over, self.score
 
         if self.frame_iteration > 100*len(self.snake):
@@ -91,7 +95,7 @@ class SnakeGameAI:
         # 4. place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = 20
+            reward = 30
             self._place_food()
         else:
             self.snake.pop()
@@ -125,11 +129,15 @@ class SnakeGameAI:
     def _update_ui(self):
         self.display.fill(BLACK)
 
-        for pt in self.snake:
-            pygame.draw.rect(self.display, BLUE1, pygame.Rect(
-                pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
-            pygame.draw.rect(self.display, BLUE2,
-                             pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+        pt = self.snake[0]
+        pygame.draw.circle(self.display, color=GREEN1, center=(pt.x+BLOCK_SIZE/2, pt.y+BLOCK_SIZE/2), radius=BLOCK_SIZE/2)
+        for pt in self.snake[1:]:
+            # pygame.draw.rect(self.display, BLUE1, pygame.Rect(
+            #     pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+            # pygame.draw.rect(self.display, BLUE2,
+            #                  pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+            pygame.draw.circle(self.display, color=GREEN1, center=(pt.x+BLOCK_SIZE/2, pt.y+BLOCK_SIZE/2), radius=BLOCK_SIZE/2 )
+            pygame.draw.circle(self.display, color=GREEN2, center=(pt.x+BLOCK_SIZE/2, pt.y+BLOCK_SIZE/2), radius=BLOCK_SIZE/3, width=3 )
 
         pygame.draw.rect(self.display, RED, pygame.Rect(
             self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))

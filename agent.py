@@ -131,33 +131,7 @@ class Agent:
         ## ok, no immediate collision danger, now look ahead, but only for bits of snake, ignore walls
         for i in range(1, LOOK_AHEAD):
             offset = 20 * (i+1)
-            point_l = Point(head.x - offset, head.y)
-            point_r = Point(head.x + offset, head.y)
-            point_u = Point(head.x, head.y - offset)
-            point_d = Point(head.x, head.y + offset)
-
-            if turn_direction == TurnDirection.STRAIGHT:
-                # rating += self._get_snake_collision_danger(game, game.direction, TurnDirection.STRAIGHT, head, offset)
-                rating +=(
-                        (dir_r and game.is_snake_collision(point_r)) or 
-                        (dir_l and game.is_snake_collision(point_l)) or 
-                        (dir_u and game.is_snake_collision(point_u)) or 
-                        (dir_d and game.is_snake_collision(point_d))) * (LOOK_AHEAD - i)
-
-            elif turn_direction == TurnDirection.RIGHT:
-                rating +=(
-                        (dir_u and game.is_snake_collision(point_r)) or 
-                        (dir_d and game.is_snake_collision(point_l)) or 
-                        (dir_l and game.is_snake_collision(point_u)) or 
-                        (dir_r and game.is_snake_collision(point_d))) * (LOOK_AHEAD - i)
-            else:
-                # LEFT
-                rating +=(
-                        (dir_d and game.is_snake_collision(point_r)) or 
-                        (dir_u and game.is_snake_collision(point_l)) or 
-                        (dir_r and game.is_snake_collision(point_u)) or 
-                        (dir_l and game.is_snake_collision(point_d))) * (LOOK_AHEAD - i)
-
+            rating += self._get_snake_collision_danger(game, game.direction, turn_direction, head, offset) * (LOOK_AHEAD - i)
             if rating:
                 break
 

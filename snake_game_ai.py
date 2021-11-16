@@ -31,6 +31,9 @@ def train(model_name, headless, reload=None):
 
         state_new = agent.get_state(game)
 
+        danger = sum(state_new[:3])
+        reward -= danger * 2 #extra penalty for moving into danger
+
         # train short memory
         #current_time = time.time()
         #agent.train_short_memory(state_old, final_move, reward, state_new, done)
